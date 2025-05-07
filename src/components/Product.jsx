@@ -1,35 +1,142 @@
-import { useEffect } from "react"
-import data from "src\data.json"
+import React, { useEffect, useState } from "react";
+import { Plus, Minus, X } from "lucide-react"; 
 
+export default function Product({ image, name, category, price }) {
+  const [cart, setCart] = useState([]);
+  const [Desserts, setDesserts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const Product = () => {
-
-    useEffect(()=>{
-
-        const getItem =async()=>{
-            try{
-                const response = await fetch ("src\data.json")
-            }
+  useEffect(() => {
+    const fetchDesserts = async () => {
+      try {
+        const response = await fetch("data.json"); 
+        const data = await response.json();
+        if (!data) {
+          console.log("can not find the data"); 
         }
+        setDesserts(data);
+      } catch (error) {
+        console.error("error ");
+      }finally{
+        setLoading(false)
+      }
+    };
+    fetchDesserts();
+  }, []);
 
-    },[])
+  const addToCart = (item) => {
+    setCart((prev) => {
+      const exists = prev.find((p) => p.id === item.id);
+      if (exists) {
+        return prev.map((p) =>
+          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+        );
+      } else {
+        return [...prev, { ...item, quantity: 1 }];
+      }
+    });
+  };
+  if(loading)return <p>loading ....</p>
 
+  const removeFromCart = (id) => {
+    setCart((prev) => prev.filter((item) => item.id !== id));
+  };
 
+  const updateQuantity = (id, amount) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item.id === id ? { ...item, quantity: item.quantity + amount } : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
 
-
-
-
-
-
-
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart
+    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+    .toFixed(2);
 
   return (
-    <div>
+    <div className="p-4 bg-[#fefbf7] min-h-screen">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-brown-900 mb-4">Desserts</h1>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Desserts.map((item, idx) => {
+              const cartItem = cart.find((c) => c.id === item.id);
+              return (
+                <div key={idx} className="bg-white p-3 rounded-lg shadow">
+                  <img
+                    src={item.image.desktop}
+                    alt={item.name}
+                    className="rounded mb-2 w-full h-32 object-cover"
+                  />
+                  <div className="mt-2 text-sm font-semibold">{item.name}</div>
+                  <div className="text-blue-600 font-bold">
+                    ${item.price.toFixed(2)}
+                  </div>
+                  <div className="mt-2">
+                    {cartItem ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <span>{cartItem.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => addToCart(item)}
+                        className="mt-2 px-4 py-1 bg-orange-600 text-white rounded"
+                      >
+                        Add to Cart
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-
-
+        <div className="w-full lg:w-1/3 bg-white p-4 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Your Cart ({totalItems})</h2>
+          <ul className="space-y-2">
+            {cart.map((item) => (
+              <li key={item.id} className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold">{item.name}</div>
+                  <div className="text-sm text-gray-500">
+                    {item.quantity} x ${item.price.toFixed(2)} = $
+                    {(item.quantity * item.price).toFixed(2)}
+                  </div>
+                </div>
+                <button onClick={() => removeFromCart(item.id)}>
+                  <X size={16} />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4 border-t pt-2 font-bold text-lg">
+            Order Total: ${totalPrice}
+          </div>
+          <div className="mt-2 text-green-700 text-sm">
+             This is a carbon-neutral delivery
+          </div>
+          <button className="mt-4 w-full bg-orange-600 text-white py-2 rounded">
+            Confirm Order
+          </button>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
-
-export default Product

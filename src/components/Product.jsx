@@ -1,61 +1,83 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Minus, X } from "lucide-react"; 
+import { Plus, Minus, X } from "lucide-react";
 
 export default function Product({ image, name, category, price }) {
   const [cart, setCart] = useState([]);
   const [Desserts, setDesserts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const fetchDesserts = async () => {
       try {
-        const response = await fetch("data.json"); 
+        const response = await fetch("data.json");
         const data = await response.json();
         if (!data) {
-          console.log("can not find the data"); 
+          console.log("can not find the data");
         }
         setDesserts(data);
       } catch (error) {
         console.error("error ");
-      }finally{
-        setLoading(false)
+      } finally {
+        setLoading(false);
       }
     };
     fetchDesserts();
   }, []);
 
+  useEffect(() => {
+    const checkMobile = () => {
+      const isPhone = /iPhone|Android|iPad|iPod/i.test(navigator.userAgent);
+      setIsMobile(isPhone);
+    };
+    checkMobile();
+  }, []);
+
   const addToCart = (item) => {
+    setMessage(`🛒 You added ${item.name} to your cart!`);
+    setTimeout(() => setMessage(""), 2000);
     setCart((prev) => {
-      const exists = prev.find((p) => p.id === item.id);
+      const exists = prev.find((p) => p.name=== item.name);
       if (exists) {
         return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+          p.name === item.name? { ...p, quantity: p.quantity + 1 } : p
         );
       } else {
         return [...prev, { ...item, quantity: 1 }];
       }
     });
   };
-  if(loading)return <p>loading ....</p>
 
-  const removeFromCart = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const removeFromCart = (name) => {
+    setCart((prev) => prev.filter((item) => item.name !== name));
   };
 
-  const updateQuantity = (id, amount) => {
+  const updateQuantity = (name, amount) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === id ? { ...item, quantity: item.quantity + amount } : item
+          item.name === name? { ...item, quantity: item.quantity + amount } : item
         )
         .filter((item) => item.quantity > 0)
     );
+  };
+
+  const handleConfirmOrder = () => {
+    if (cart.length === 0) {
+      setMessage("Your cart is empty.");
+    } else {
+      setMessage("Your order has been confirmed!");
+    }
+    setTimeout(() => setMessage(""), 3000);
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
     .toFixed(2);
+
+  if (loading) return <p>loading ....</p>;
 
   return (
     <div className="p-4 bg-[#fefbf7] min-h-screen">
@@ -64,7 +86,7 @@ export default function Product({ image, name, category, price }) {
           <h1 className="text-3xl font-bold text-brown-900 mb-4">Desserts</h1>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {Desserts.map((item, idx) => {
-              const cartItem = cart.find((c) => c.id === item.id);
+              const cartItem = cart.find((c) => c.name === item.name);
               return (
                 <div key={idx} className="bg-white p-3 rounded-lg shadow">
                   <img
@@ -80,14 +102,14 @@ export default function Product({ image, name, category, price }) {
                     {cartItem ? (
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => updateQuantity(item.name, -1)}
                           className="px-2 py-1 bg-orange-100 text-orange-700 rounded"
                         >
                           <Minus size={16} />
                         </button>
                         <span>{cartItem.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => updateQuantity(item.name, 1)}
                           className="px-2 py-1 bg-orange-100 text-orange-700 rounded"
                         >
                           <Plus size={16} />
@@ -107,7 +129,7 @@ export default function Product({ image, name, category, price }) {
             })}
           </div>
         </div>
-
+        
         <div className="w-full lg:w-1/3 bg-white p-4 rounded-xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Your Cart ({totalItems})</h2>
           <ul className="space-y-2">
@@ -130,11 +152,32 @@ export default function Product({ image, name, category, price }) {
             Order Total: ${totalPrice}
           </div>
           <div className="mt-2 text-green-700 text-sm">
-             This is a carbon-neutral delivery
+            This is a carbon-neutral delivery
           </div>
-          <button className="mt-4 w-full bg-orange-600 text-white py-2 rounded">
+          <button
+            onClick={handleConfirmOrder}
+            className="mt-4 w-full bg-orange-600 text-white py-2 rounded"
+          >
             Confirm Order
           </button>
+
+          {}
+          {message && (
+            <div className="mt-4 p-3 bg-green-100 text-green-800 rounded shadow">
+              {message}
+            </div>
+          )}
+
+          {}
+          {isMobile && (
+            <div className="mt-4">
+              <img
+                src="https://via.placeholder.com/300x200?text=Thank+You+Mobile+User"
+                alt="Mobile Thank You"
+                className="rounded-lg shadow"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ export default function Product({ image, name, category, price }) {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [showModal, setShowModal] = useState(false); // ✅ Modal visibility
+  const [showModal, setShowModal] = useState(false); 
 
   useEffect(() => {
     const fetchDesserts = async () => {
@@ -70,13 +70,13 @@ export default function Product({ image, name, category, price }) {
     if (cart.length === 0) {
       setMessage("Your cart is empty.");
     } else {
-      setShowModal(true); // ✅ Show modal
+      setShowModal(true); 
     }
   };
 
   const handleCloseModal = () => {
-    setShowModal(false); // ✅ Close modal
-    setCart([]); // ✅ Reset cart
+    setShowModal(false); 
+    setCart([]); 
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
